@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tooltip Doll · Battle Brothers String Editor</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">Tooltip Doll</h1>
+    <label class="file-loader" title="Load a .nut file to edit">
+      <input id="file-input" type="file" accept=".nut,.txt" />
+      <span>Load .nut</span>
+    </label>
+    <div class="search-group">
+      <input id="search-input" type="search" placeholder="Filter strings…" aria-label="Filter strings" />
+    </div>
+    <button id="add-entry" type="button" class="ghost-button">Add string</button>
+    <button id="download-file" type="button" class="primary-button" disabled>Download updated file</button>
+    <div id="status" role="status" aria-live="polite"></div>
+  </header>
+
+  <main class="app-main">
+    <aside class="entry-sidebar">
+      <div class="entry-sidebar__header">
+        <span class="entry-count" id="entry-count">0 strings</span>
+      </div>
+      <nav class="entry-list" id="entry-list" aria-label="Loaded strings"></nav>
+    </aside>
+
+    <section class="workspace" aria-live="polite">
+      <div class="workspace__editor">
+        <div class="field-group">
+          <label for="entry-name">Identifier</label>
+          <input id="entry-name" type="text" readonly placeholder="PerkDescription.SomeName" />
+        </div>
+        <div class="field-group">
+          <label for="entry-text">Display text</label>
+          <textarea id="entry-text" spellcheck="false" disabled placeholder="Load a .nut file or select an entry to begin."></textarea>
+        </div>
+        <div class="field-group">
+          <label for="assignment-output">Generated assignment</label>
+          <textarea id="assignment-output" class="output" readonly spellcheck="false"></textarea>
+          <div class="button-row">
+            <button id="copy-assignment" type="button" disabled>Copy assignment</button>
+            <button id="copy-preview-html" type="button" disabled>Copy preview HTML</button>
+          </div>
+        </div>
+      </div>
+      <div class="workspace__preview">
+        <h2 class="preview-title">Preview</h2>
+        <div class="parchment" role="presentation">
+          <div class="parchment__top"></div>
+          <div class="parchment__body" id="preview" aria-live="polite">
+            Load a string to see the tooltip preview.
+          </div>
+        </div>
+        <section class="notes" id="entry-notes" hidden>
+          <h3>Notes</h3>
+          <ul></ul>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span><strong>Tip:</strong> use BBCode ([b], [i], [u], [color=#hex]) and \n for new lines. The preview matches the in-game parchment tooltip.</span>
+  </footer>
+
+  <script src="script.js" type="module"></script>
+</body>
+</html>
