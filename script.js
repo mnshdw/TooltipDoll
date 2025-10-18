@@ -9,16 +9,16 @@ const state = {
 };
 
 const COLOR_TOKEN_MAP = {
-  "this.Const.UI.Color.PositiveValue": "#dda21f",
-  "::Const.UI.Color.PositiveValue": "#dda21f",
+  "this.Const.UI.Color.PositiveValue": "#135213",
+  "::Const.UI.Color.PositiveValue": "#135213",
   "this.Const.UI.Color.VeryPositiveValue": "#f5d87a",
   "::Const.UI.Color.VeryPositiveValue": "#f5d87a",
-  "this.Const.UI.Color.NegativeValue": "#cd2626",
-  "::Const.UI.Color.NegativeValue": "#cd2626",
+  "this.Const.UI.Color.NegativeValue": "#8f1e1e",
+  "::Const.UI.Color.NegativeValue": "#8f1e1e",
   "this.Const.UI.Color.VeryNegativeValue": "#9a1c1c",
   "::Const.UI.Color.VeryNegativeValue": "#9a1c1c",
-  "this.Const.UI.Color.DamageValue": "#d77b3c",
-  "::Const.UI.Color.DamageValue": "#d77b3c",
+  "this.Const.UI.Color.DamageValue": "#8f1e1e",
+  "::Const.UI.Color.DamageValue": "#8f1e1e",
   "this.Const.UI.Color.Passive": "#4f1800",
   "::Const.UI.Color.Passive": "#4f1800",
   "this.Const.UI.Color.Active": "#000ec1",
@@ -37,10 +37,10 @@ const COLOR_TOKEN_MAP = {
   "::Const.UI.Color.Buff": "#56c7ff",
   "this.Const.UI.Color.Debuff": "#ff5e5e",
   "::Const.UI.Color.Debuff": "#ff5e5e",
-  "this.Const.UI.Color.PositiveEventValue": "#dda21f",
-  "::Const.UI.Color.PositiveEventValue": "#dda21f",
-  "this.Const.UI.Color.NegativeEventValue": "#cd2626",
-  "::Const.UI.Color.NegativeEventValue": "#cd2626",
+  "this.Const.UI.Color.PositiveEventValue": "#1e861e",
+  "::Const.UI.Color.PositiveEventValue": "#1e861e",
+  "this.Const.UI.Color.NegativeEventValue": "#a22424",
+  "::Const.UI.Color.NegativeEventValue": "#a22424",
 };
 
 const DEFAULT_COLOR = "#d7b174";
