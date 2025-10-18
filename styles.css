@@ -239,6 +239,10 @@ button:disabled {
   box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.18);
 }
 
+.workspace__preview {
+  align-items: center;
+}
+
 .field-group {
   display: flex;
   flex-direction: column;
@@ -299,8 +303,8 @@ textarea.output {
   background-size: 25.5rem auto;
   background-position: bottom center;
   padding: 2.3rem 1.35rem 2rem;
-  color: var(--text-main);
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+  color: #120f0c;
+  text-shadow: none;
   filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.45));
 }
 
@@ -319,7 +323,7 @@ textarea.output {
 .parchment__body {
   font-size: 0.9rem;
   line-height: 1.35;
-  color: #ddc79f;
+  color: #120f0c;
   min-height: 16rem;
   max-height: 55vh;
   overflow-y: auto;
@@ -343,7 +347,7 @@ textarea.output {
 }
 
 .parchment__body span {
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+  text-shadow: none;
 }
 
 .parchment__body br + br {

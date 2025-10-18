@@ -22,4 +22,4 @@ A lightweight inspector and editor for Battle Brothers `::Const.Strings` tooltip
 
 ## Development
 
-The page uses vanilla HTML/CSS/JS and references Google Fonts. Tooltip artwork is copied from the base game assets (`tooltip_255_top.png`, `tooltip_255_bottom.png`).
+The page uses vanilla HTML/CSS/JS and bundles the in-game `FreeUniversal` and `Cinzel` fonts under the SIL Open Font License for local use. Tooltip artwork is copied from the base game assets (`tooltip_255_top.png`, `tooltip_255_bottom.png`).
