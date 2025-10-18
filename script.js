@@ -56,7 +56,6 @@ const textareaEl = document.querySelector("#entry-text");
 const previewEl = document.querySelector("#preview");
 const assignmentOutputEl = document.querySelector("#assignment-output");
 const copyAssignmentBtn = document.querySelector("#copy-assignment");
-const copyPreviewBtn = document.querySelector("#copy-preview-html");
 const downloadBtn = document.querySelector("#download-file");
 const addEntryBtn = document.querySelector("#add-entry");
 const statusEl = document.querySelector("#status");
@@ -68,7 +67,6 @@ fileInput.addEventListener("change", handleFileLoad);
 searchInput.addEventListener("input", handleSearchChange);
 textareaEl.addEventListener("input", handleTextChange);
 copyAssignmentBtn.addEventListener("click", () => copyToClipboard(assignmentOutputEl.value, "Assignment copied."));
-copyPreviewBtn.addEventListener("click", () => copyToClipboard(previewEl.innerHTML, "Preview HTML copied."));
 downloadBtn.addEventListener("click", handleDownload);
 addEntryBtn.addEventListener("click", handleAddEntry);
 
@@ -226,7 +224,8 @@ function getFilteredEntries() {
   );
 }
 
-function selectEntry(id) {
+function selectEntry(id, options = {}) {
+  const focusEditor = options.focusEditor ?? true;
   const entry = state.entries.find((item) => item.id === id);
   state.selectedId = entry?.id ?? null;
   renderEntryList();
@@ -237,11 +236,12 @@ function selectEntry(id) {
   entryNameEl.value = entry.key;
   textareaEl.disabled = false;
   textareaEl.value = entry.displayText;
-  textareaEl.focus();
-  textareaEl.setSelectionRange(entry.displayText.length, entry.displayText.length);
+  if (focusEditor) {
+    textareaEl.focus();
+    textareaEl.setSelectionRange(entry.displayText.length, entry.displayText.length);
+  }
   assignmentOutputEl.value = formatAssignment(entry);
   copyAssignmentBtn.disabled = false;
-  copyPreviewBtn.disabled = false;
   downloadBtn.disabled = false;
   updatePreview(entry);
   updateNotes(entry);
@@ -252,7 +252,6 @@ function clearEditor() {
   textareaEl.disabled = true;
   assignmentOutputEl.value = "";
   copyAssignmentBtn.disabled = true;
-  copyPreviewBtn.disabled = true;
   entryNameEl.value = "";
   previewEl.innerHTML = "Load a string to see the tooltip preview.";
   if (notesSection) {
@@ -269,13 +268,19 @@ function handleSearchChange(event) {
   const selectedStillVisible = filtered.some((entry) => entry.id === state.selectedId);
   renderEntryList();
   if (!selectedStillVisible) {
-    if (filtered.length > 0) {
-      const preferred = filtered.find((item) => item.key.startsWith(PERK_DESCRIPTION_PREFIX)) ?? filtered[0];
-      selectEntry(preferred.id);
+    if (!state.searchTerm) {
+      if (filtered.length > 0) {
+        const preferred = filtered.find((item) => item.key.startsWith(PERK_DESCRIPTION_PREFIX)) ?? filtered[0];
+        selectEntry(preferred.id, { focusEditor: false });
+      } else {
+        state.selectedId = null;
+        clearEditor();
+      }
     } else {
       state.selectedId = null;
       clearEditor();
     }
+    searchInput.focus();
   }
 }
 
