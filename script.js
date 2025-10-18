@@ -262,7 +262,17 @@ function clearEditor() {
 
 function handleSearchChange(event) {
   state.searchTerm = event.target.value.trim();
+  const filtered = getFilteredEntries();
+  const selectedStillVisible = filtered.some((entry) => entry.id === state.selectedId);
   renderEntryList();
+  if (!selectedStillVisible) {
+    if (filtered.length > 0) {
+      selectEntry(filtered[0].id);
+    } else {
+      state.selectedId = null;
+      clearEditor();
+    }
+  }
 }
 
 function handleTextChange(event) {
