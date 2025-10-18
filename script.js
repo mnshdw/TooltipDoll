@@ -107,14 +107,19 @@ function loadContent(sourceText, fileName = "") {
 
 function parseEntries(content) {
   const parsed = [];
-  const regex = /::Const\.Strings\.([\w\.]+)\s*=\s*([\s\S]*?);/g;
+  const regex = /::Const\.Strings\.([\w\.]+)\s*(=|<-)\s*([\s\S]*?);/g;
   let match;
   while ((match = regex.exec(content)) !== null) {
     const key = match[1];
-    const expression = match[2];
-    const equalsIndex = content.indexOf("=", match.index);
+    const operator = match[2];
+    const expression = match[3];
+    const searchStart = match.index + "::Const.Strings.".length + key.length;
+    let operatorIndex = content.indexOf(operator, searchStart);
     const semicolonIndex = regex.lastIndex - 1;
-    const valueStart = equalsIndex + 1;
+    if (operatorIndex === -1 || operatorIndex > semicolonIndex) {
+      operatorIndex = match.index + match[0].indexOf(operator);
+    }
+    const valueStart = operatorIndex + operator.length;
     const valueEnd = semicolonIndex;
     const rawExpression = content.slice(valueStart, valueEnd);
     const leadingWhitespace = rawExpression.match(/^\s*/)?.[0] ?? "";
@@ -129,7 +134,7 @@ function parseEntries(content) {
       trailingWhitespace,
       valueStart,
       valueEnd,
-      equalsIndex,
+      operator,
       displayText: decodeExpression(trimmed),
       unknownTokens: collectUnknownTokens(trimmed),
       dirty: false,
@@ -294,7 +299,8 @@ function updateNotes(entry) {
 
 function formatAssignment(entry) {
   const encoded = encodeSquirrelString(entry.displayText);
-  return `::Const.Strings.${entry.key} = ${encoded};`;
+  const operator = entry.operator ?? "<-";
+  return `::Const.Strings.${entry.key} ${operator} ${encoded};`;
 }
 
 function encodeSquirrelString(text) {
@@ -446,7 +452,7 @@ function handleAddEntry() {
     trailingWhitespace: "",
     valueStart: 0,
     valueEnd: 0,
-    equalsIndex: 0,
+    operator: "<-",
     displayText: "",
     unknownTokens: [],
     dirty: true,
