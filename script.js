@@ -5,48 +5,57 @@ const state = {
   fileName: "",
   searchTerm: "",
   nextId: 0,
-  unknownTokens: new Set(),
 };
 
-const COLOR_TOKEN_MAP = {
-  "this.Const.UI.Color.PositiveValue": "#135213",
-  "::Const.UI.Color.PositiveValue": "#135213",
-  "this.Const.UI.Color.VeryPositiveValue": "#f5d87a",
-  "::Const.UI.Color.VeryPositiveValue": "#f5d87a",
-  "this.Const.UI.Color.NegativeValue": "#8f1e1e",
-  "::Const.UI.Color.NegativeValue": "#8f1e1e",
-  "this.Const.UI.Color.VeryNegativeValue": "#9a1c1c",
-  "::Const.UI.Color.VeryNegativeValue": "#9a1c1c",
-  "this.Const.UI.Color.DamageValue": "#8f1e1e",
-  "::Const.UI.Color.DamageValue": "#8f1e1e",
-  "this.Const.UI.Color.Passive": "#4f1800",
-  "::Const.UI.Color.Passive": "#4f1800",
-  "this.Const.UI.Color.Active": "#000ec1",
-  "::Const.UI.Color.Active": "#000ec1",
-  "this.Const.UI.Color.OneTimeEffect": "#000ec1",
-  "::Const.UI.Color.OneTimeEffect": "#000ec1",
-  "this.Const.UI.Color.Skill": "#400080",
-  "::Const.UI.Color.Skill": "#400080",
-  "this.Const.UI.Color.Status": "#731f39",
-  "::Const.UI.Color.Status": "#731f39",
-  "this.Const.UI.Color.Perk": "#008060",
-  "::Const.UI.Color.Perk": "#008060",
-  "this.Const.UI.Color.RuneColor": "#bf2aac",
-  "::Const.UI.Color.RuneColor": "#bf2aac",
-  "this.Const.UI.Color.Buff": "#56c7ff",
-  "::Const.UI.Color.Buff": "#56c7ff",
-  "this.Const.UI.Color.Debuff": "#ff5e5e",
-  "::Const.UI.Color.Debuff": "#ff5e5e",
-  "this.Const.UI.Color.PositiveEventValue": "#1e861e",
-  "::Const.UI.Color.PositiveEventValue": "#1e861e",
-  "this.Const.UI.Color.NegativeEventValue": "#a22424",
-  "::Const.UI.Color.NegativeEventValue": "#a22424",
+const COLOR_DEFINITIONS = {
+  PositiveValue: "#135213",
+  VeryPositiveValue: "#f5d87a",
+  NegativeValue: "#8f1e1e",
+  VeryNegativeValue: "#9a1c1c",
+  DamageValue: "#8f1e1e",
+  Passive: "#4f1800",
+  Active: "#000ec1",
+  OneTimeEffect: "#000ec1",
+  Skill: "#400080",
+  Status: "#731f39",
+  Perk: "#008060",
+  RuneColor: "#bf2aac",
+  Buff: "#56c7ff",
+  Debuff: "#ff5e5e",
+  PositiveEventValue: "#1e861e",
+  NegativeEventValue: "#a22424",
 };
+
+const COLOR_TOKEN_MAP = Object.entries(COLOR_DEFINITIONS).reduce((map, [name, value]) => {
+  map[`::Const.UI.Color.${name}`] = value;
+  map[`this.Const.UI.Color.${name}`] = value;
+  return map;
+}, {});
 
 const DEFAULT_COLOR = "#d7b174";
 
+const COLOR_NAME_MAP = { ...COLOR_DEFINITIONS };
+
+const COLOR_PLACEHOLDER_PREFIX = "__TD_COLOR__";
+const COLOR_PLACEHOLDER_SUFFIX = "__";
+
 const PERK_NAME_PREFIX = "PerkName.";
 const PERK_DESCRIPTION_PREFIX = "PerkDescription.";
+
+function makeColorToken(name, scope = "::") {
+  return scope === "this" ? `this.Const.UI.Color.${name}` : `::Const.UI.Color.${name}`;
+}
+
+function canonicalizeColorToken(token) {
+  if (!token) {
+    return token;
+  }
+  const match = token.match(/(?:this|::)\.Const\.UI\.Color\.([A-Za-z0-9_]+)/);
+  if (!match) {
+    return token;
+  }
+  return makeColorToken(match[1], "::");
+}
 
 const fileInput = document.querySelector("#file-input");
 const searchInput = document.querySelector("#search-input");
@@ -89,6 +98,7 @@ function handleFileLoad(event) {
 }
 
 function loadContent(sourceText, fileName = "") {
+  state.nextId = 0;
   state.originalContent = sourceText;
   state.fileName = fileName;
   state.entries = parseEntries(sourceText);
@@ -126,6 +136,7 @@ function parseEntries(content) {
     const leadingWhitespace = rawExpression.match(/^\s*/)?.[0] ?? "";
     const trailingWhitespace = rawExpression.match(/\s*$/)?.[0] ?? "";
     const trimmed = rawExpression.trim();
+    const { text: displayText, colorTokens } = decodeExpression(trimmed);
     const entry = {
       id: state.nextId++,
       key,
@@ -136,51 +147,72 @@ function parseEntries(content) {
       valueStart,
       valueEnd,
       operator,
-      displayText: decodeExpression(trimmed),
-      unknownTokens: collectUnknownTokens(trimmed),
+      displayText,
+      colorTokens,
+      unknownTokens: [],
       dirty: false,
       isNew: false,
     };
+    updateEntryUnknownTokens(entry);
     parsed.push(entry);
   }
   return parsed;
 }
 
-function collectUnknownTokens(expr) {
-  const unknown = new Set();
-  const tokenRegex = /(::|this\.)Const\.UI\.Color\.[A-Za-z0-9_]+/g;
-  let match;
-  while ((match = tokenRegex.exec(expr)) !== null) {
-    const token = match[0];
-    if (!COLOR_TOKEN_MAP[token]) {
-      state.unknownTokens.add(token);
-      unknown.add(token);
-    }
-  }
-  return Array.from(unknown);
-}
-
 function decodeExpression(expr) {
-  if (!expr) return "";
-  let processed = expr.replace(/(::|this\.)Const\.UI\.Color\.[A-Za-z0-9_]+/g, (token) => {
-    const value = COLOR_TOKEN_MAP[token];
-    if (!value) {
-      return `"${DEFAULT_COLOR}"`;
+  if (!expr) {
+    return { text: "", colorTokens: {} };
+  }
+
+  const colorTokens = {};
+  const tokenRegex = /(this\.Const\.UI\.Color|::Const\.UI\.Color)\.([A-Za-z0-9_]+)/g;
+  let processed = expr.replace(tokenRegex, (_, base, name) => {
+    const scope = base.startsWith("this") ? "this" : "::";
+    const token = makeColorToken(name, scope);
+    const canonical = canonicalizeColorToken(token);
+    if (!colorTokens[name]) {
+      colorTokens[name] = canonical;
     }
-    return `"${value}"`;
+    return `"${COLOR_PLACEHOLDER_PREFIX}${name}${COLOR_PLACEHOLDER_SUFFIX}"`;
   });
+
   const parts = [];
   const stringRegex = /"((?:\\.|[^"\\])*)"/g;
   let match;
   while ((match = stringRegex.exec(processed)) !== null) {
     parts.push(match[1]);
   }
+
   let combined = parts.join("");
+  const placeholderInColorPattern = new RegExp(`\\[color=${COLOR_PLACEHOLDER_PREFIX}([A-Za-z0-9_]+)${COLOR_PLACEHOLDER_SUFFIX}\\]`, "g");
+  combined = combined.replace(placeholderInColorPattern, (_, name) => `[color=${name}]`);
+  const standalonePlaceholderPattern = new RegExp(`${COLOR_PLACEHOLDER_PREFIX}([A-Za-z0-9_]+)${COLOR_PLACEHOLDER_SUFFIX}`, "g");
+  combined = combined.replace(standalonePlaceholderPattern, (_, name) => name);
   combined = combined.replace(/\\n/g, "\n");
+  combined = combined.replace(/\\r/g, "\r");
   combined = combined.replace(/\\t/g, "\t");
   combined = combined.replace(/\\"/g, '"');
   combined = combined.replace(/\\\\/g, "\\");
-  return combined;
+
+  return { text: combined, colorTokens };
+}
+
+function updateEntryUnknownTokens(entry) {
+  if (!entry) {
+    return [];
+  }
+  const unknown = new Set();
+  if (entry.colorTokens) {
+    Object.entries(entry.colorTokens).forEach(([name, tokenString]) => {
+      const canonical = canonicalizeColorToken(tokenString ?? makeColorToken(name));
+      entry.colorTokens[name] = canonical;
+      if (!COLOR_TOKEN_MAP[canonical] && !COLOR_NAME_MAP[name]) {
+        unknown.add(canonical);
+      }
+    });
+  }
+  entry.unknownTokens = Array.from(unknown);
+  return entry.unknownTokens;
 }
 
 function renderEntryList() {
@@ -244,6 +276,7 @@ function selectEntry(id, options = {}) {
   copyAssignmentBtn.disabled = false;
   downloadBtn.disabled = false;
   updatePreview(entry);
+  updateEntryUnknownTokens(entry);
   updateNotes(entry);
 }
 
@@ -290,7 +323,9 @@ function handleTextChange(event) {
   entry.displayText = event.target.value;
   entry.dirty = true;
   assignmentOutputEl.value = formatAssignment(entry);
+  updateEntryUnknownTokens(entry);
   updatePreview(entry);
+  updateNotes(entry);
   renderEntryList();
 }
 
@@ -322,9 +357,9 @@ function updateNotes(entry) {
 }
 
 function formatAssignment(entry) {
-  const encoded = encodeSquirrelString(entry.displayText);
+  const expression = encodeExpression(entry);
   const operator = entry.operator ?? "<-";
-  return `::Const.Strings.${entry.key} ${operator} ${encoded};`;
+  return `::Const.Strings.${entry.key} ${operator} ${expression};`;
 }
 
 function encodeSquirrelString(text) {
@@ -332,10 +367,67 @@ function encodeSquirrelString(text) {
     return '""';
   }
   let escaped = text.replace(/\\/g, "\\\\");
-  escaped = escaped.replace(/\r?\n/g, "\\n");
+  escaped = escaped.replace(/\r/g, "\\r");
+  escaped = escaped.replace(/\n/g, "\\n");
   escaped = escaped.replace(/\t/g, "\\t");
   escaped = escaped.replace(/"/g, '\\"');
+  escaped = escaped.replace(/\\\\'/g, "\\'");
   return `"${escaped}"`;
+}
+
+function encodeExpression(entry) {
+  const text = entry.displayText ?? "";
+  const tokenLookup = entry.colorTokens ?? {};
+  if (!entry.colorTokens) {
+    entry.colorTokens = tokenLookup;
+  }
+
+  const parts = [];
+  const pushStringPart = (value) => {
+    if (!value) return;
+    const encoded = encodeSquirrelString(value);
+    const lastIndex = parts.length - 1;
+    if (lastIndex >= 0) {
+      const last = parts[lastIndex];
+      if (typeof last === "string" && last.startsWith("\"") && last.endsWith("\"")) {
+        parts[lastIndex] = last.slice(0, -1) + encoded.slice(1);
+        return;
+      }
+    }
+    parts.push(encoded);
+  };
+
+  const colorPattern = /\[color=([A-Za-z0-9_]+)\]/g;
+  let cursor = 0;
+  let match;
+
+  while ((match = colorPattern.exec(text)) !== null) {
+    const start = match.index;
+    if (start > cursor) {
+      pushStringPart(text.slice(cursor, start));
+    }
+    const tokenName = match[1];
+    const fullToken = canonicalizeColorToken(tokenLookup[tokenName] ?? makeColorToken(tokenName));
+    tokenLookup[tokenName] = fullToken;
+    pushStringPart("[color=");
+    parts.push(fullToken);
+    pushStringPart("]");
+    cursor = start + match[0].length;
+  }
+
+  if (cursor < text.length) {
+    pushStringPart(text.slice(cursor));
+  }
+
+  if (parts.length === 0) {
+    return encodeSquirrelString(text);
+  }
+
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  return parts.join(" + ");
 }
 
 function bbcodeToHtml(rawText) {
@@ -373,6 +465,16 @@ function escapeHtml(text) {
 
 function sanitizeColor(color) {
   const trimmed = color.trim().replace(/"/g, "");
+  if (COLOR_TOKEN_MAP[trimmed]) {
+    return COLOR_TOKEN_MAP[trimmed];
+  }
+  if (/^[A-Za-z0-9_]+$/.test(trimmed)) {
+    const mapped = COLOR_NAME_MAP[trimmed];
+    if (mapped) {
+      return mapped;
+    }
+    return DEFAULT_COLOR;
+  }
   if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(trimmed)) {
     return trimmed;
   }
@@ -474,8 +576,8 @@ function buildUpdatedContent() {
   const replacements = state.entries
     .filter((entry) => !entry.isNew)
     .map((entry) => {
-      const encoded = encodeSquirrelString(entry.displayText);
-      const replacement = `${entry.leadingWhitespace || " "}${encoded}${entry.trailingWhitespace || ""}`;
+      const expression = encodeExpression(entry);
+      const replacement = `${entry.leadingWhitespace || " "}${expression}${entry.trailingWhitespace || ""}`;
       return { start: entry.valueStart, end: entry.valueEnd, replacement };
     })
     .sort((a, b) => b.start - a.start);
@@ -519,6 +621,7 @@ function handleAddEntry() {
     valueEnd: 0,
     operator: "<-",
     displayText: "",
+    colorTokens: {},
     unknownTokens: [],
     dirty: true,
     isNew: true,
