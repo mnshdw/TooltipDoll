@@ -1,4 +1,34 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Source+Code+Pro:wght@400;500&display=swap");
+@font-face {
+  font-family: "FreeUniversal";
+  src: url("./assets/fonts/FreeUniversal-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "FreeUniversal";
+  src: url("./assets/fonts/FreeUniversal-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cinzel";
+  src: url("./assets/fonts/Cinzel-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cinzel";
+  src: url("./assets/fonts/Cinzel-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   color-scheme: dark;
@@ -15,7 +45,7 @@
   --text-muted: #b59a70;
   --shadow-strong: rgba(0, 0, 0, 0.7);
   --shadow-soft: rgba(0, 0, 0, 0.35);
-  font-size: 16px;
+  font-size: 15px;
 }
 
 * {
@@ -27,14 +57,17 @@ body {
   min-height: 100vh;
   background: radial-gradient(circle at top, #22160f 0%, var(--bg-primary) 45%);
   color: var(--text-main);
-  font-family: "Cinzel", serif;
+  font-family: "FreeUniversal", "Trebuchet MS", Arial, sans-serif;
   display: flex;
   flex-direction: column;
 }
 
-h1, h2, h3 {
-  font-weight: 500;
+h1,
+h2,
+h3 {
+  font-weight: 400;
   margin: 0;
+  font-family: "Cinzel", "Times New Roman", serif;
 }
 
 button,
@@ -95,6 +128,7 @@ button:disabled {
 .app-title {
   font-size: 1.5rem;
   letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
 .file-loader {
@@ -156,7 +190,7 @@ button:disabled {
   align-items: center;
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
   text-align: left;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 .entry-button .name {
@@ -216,6 +250,7 @@ button:disabled {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-muted);
+  font-family: "Cinzel", "Times New Roman", serif;
 }
 
 textarea,
@@ -231,14 +266,14 @@ input[type="text"] {
 textarea#entry-text {
   min-height: 16rem;
   resize: vertical;
-  font-family: "Source Code Pro", monospace;
-  line-height: 1.45;
+  font-family: "FreeUniversal", "Trebuchet MS", Arial, sans-serif;
+  line-height: 1.4;
   letter-spacing: 0.01em;
 }
 
 textarea.output {
   min-height: 7.5rem;
-  font-family: "Source Code Pro", monospace;
+  font-family: "FreeUniversal", "Trebuchet MS", Arial, sans-serif;
   background: rgba(20, 14, 8, 0.85);
   color: var(--accent);
   line-height: 1.5;
@@ -257,12 +292,13 @@ textarea.output {
 
 .parchment {
   position: relative;
-  width: 100%;
+  width: 24rem;
+  max-width: 100%;
   background-image: url("./assets/tooltip_255_bottom.png");
   background-repeat: no-repeat;
-  background-size: 100% auto;
+  background-size: 25.5rem auto;
   background-position: bottom center;
-  padding: 2.6rem 1.6rem 2.4rem;
+  padding: 2.3rem 1.35rem 2rem;
   color: var(--text-main);
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
   filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.45));
@@ -271,29 +307,30 @@ textarea.output {
 .parchment::before {
   content: "";
   position: absolute;
-  top: -0.6rem;
-  left: -0.45rem;
-  right: -0.45rem;
-  height: 1.7rem;
+  top: -0.55rem;
+  left: -0.75rem;
+  width: 25.5rem;
+  height: 1.6rem;
   background-image: url("./assets/tooltip_255_top.png");
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: 25.5rem 1.6rem;
 }
 
 .parchment__body {
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: #e9d8b6;
-  min-height: 18rem;
-  max-height: 60vh;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #ddc79f;
+  min-height: 16rem;
+  max-height: 55vh;
   overflow-y: auto;
-  padding-right: 0.5rem;
+  padding-right: 0.4rem;
 }
 
 .parchment__body strong,
 .parchment__body .bbcode-bold {
   color: var(--accent-strong);
-  font-weight: 600;
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-weight: 700;
 }
 
 .bbcode-italic {
@@ -306,11 +343,11 @@ textarea.output {
 }
 
 .parchment__body span {
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
 }
 
 .parchment__body br + br {
-  line-height: 1.9;
+  line-height: 1.6;
 }
 
 .notes {
