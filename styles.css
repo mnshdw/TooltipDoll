@@ -354,6 +354,19 @@ textarea.output {
   line-height: 1.6;
 }
 
+.perk-preview__name {
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.85rem;
+  color: #120f0c;
+}
+
+.perk-preview__description {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
 .notes {
   background: rgba(30, 20, 12, 0.7);
   border: 1px solid rgba(221, 162, 31, 0.3);

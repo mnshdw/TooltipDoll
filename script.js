@@ -45,6 +45,9 @@ const COLOR_TOKEN_MAP = {
 
 const DEFAULT_COLOR = "#d7b174";
 
+const PERK_NAME_PREFIX = "PerkName.";
+const PERK_DESCRIPTION_PREFIX = "PerkDescription.";
+
 const fileInput = document.querySelector("#file-input");
 const searchInput = document.querySelector("#search-input");
 const entryListEl = document.querySelector("#entry-list");
@@ -240,7 +243,7 @@ function selectEntry(id) {
   copyAssignmentBtn.disabled = false;
   copyPreviewBtn.disabled = false;
   downloadBtn.disabled = false;
-  updatePreview(entry.displayText);
+  updatePreview(entry);
   updateNotes(entry);
 }
 
@@ -267,7 +270,8 @@ function handleSearchChange(event) {
   renderEntryList();
   if (!selectedStillVisible) {
     if (filtered.length > 0) {
-      selectEntry(filtered[0].id);
+      const preferred = filtered.find((item) => item.key.startsWith(PERK_DESCRIPTION_PREFIX)) ?? filtered[0];
+      selectEntry(preferred.id);
     } else {
       state.selectedId = null;
       clearEditor();
@@ -281,12 +285,17 @@ function handleTextChange(event) {
   entry.displayText = event.target.value;
   entry.dirty = true;
   assignmentOutputEl.value = formatAssignment(entry);
-  updatePreview(entry.displayText);
+  updatePreview(entry);
   renderEntryList();
 }
 
-function updatePreview(text) {
-  previewEl.innerHTML = text ? bbcodeToHtml(text) : "";
+function updatePreview(entry) {
+  if (!entry) {
+    previewEl.innerHTML = "";
+    return;
+  }
+  const html = buildPreviewHtml(entry);
+  previewEl.innerHTML = html;
 }
 
 function updateNotes(entry) {
@@ -366,6 +375,47 @@ function sanitizeColor(color) {
     return trimmed;
   }
   return DEFAULT_COLOR;
+}
+
+function getPerkBaseKey(key) {
+  if (key.startsWith(PERK_NAME_PREFIX)) {
+    return key.slice(PERK_NAME_PREFIX.length);
+  }
+  if (key.startsWith(PERK_DESCRIPTION_PREFIX)) {
+    return key.slice(PERK_DESCRIPTION_PREFIX.length);
+  }
+  return null;
+}
+
+function findPerkEntry(baseKey, prefix) {
+  return state.entries.find((item) => item.key === `${prefix}${baseKey}`);
+}
+
+function buildPreviewHtml(entry) {
+  const baseKey = getPerkBaseKey(entry.key);
+  if (!baseKey) {
+    return entry.displayText ? bbcodeToHtml(entry.displayText) : "";
+  }
+  const nameEntry = findPerkEntry(baseKey, PERK_NAME_PREFIX) ?? null;
+  const descriptionEntry = findPerkEntry(baseKey, PERK_DESCRIPTION_PREFIX) ?? null;
+
+  const nameHtml = nameEntry ? bbcodeToHtml(nameEntry.id === entry.id ? entry.displayText : nameEntry.displayText) : "";
+  const descriptionHtml = descriptionEntry
+    ? bbcodeToHtml(descriptionEntry.id === entry.id ? entry.displayText : descriptionEntry.displayText)
+    : "";
+
+  if (!nameHtml && !descriptionHtml) {
+    return entry.displayText ? bbcodeToHtml(entry.displayText) : "";
+  }
+
+  let html = "";
+  if (nameHtml) {
+    html += `<div class="perk-preview__name">${nameHtml}</div>`;
+  }
+  if (descriptionHtml) {
+    html += `<div class="perk-preview__description">${descriptionHtml}</div>`;
+  }
+  return html;
 }
 
 async function copyToClipboard(value, successMessage) {
